@@ -1,4 +1,5 @@
 import React, {Component} from "react";
+import Login from "./components/Login";
 import NewRepo from "./components/NewRepo";
 import Repositories from "./components/Repositories";
 import Dropdown from "./components/Dropdown";
@@ -10,33 +11,21 @@ import {
 } from "react-router-dom";
 import {home, github, plus} from "./icons";
 import netlifyIdentity from "netlify-identity-widget";
+import {connect} from "react-redux";
 
 class App extends Component {
-  constructor() {
-    super();
-    this.state = {user: null};
-    this.handleLogIn = this.handleLogIn.bind(this);
-    this.handleLogOut = this.handleLogOut.bind(this);
-  }
-
-  componentDidMount() {
-    netlifyIdentity.on("login", (user) => this.setState({user}));
-    this.setState({user: netlifyIdentity.currentUser()});
-  }
-
-  handleLogIn() {
+  handleLogIn = () => {
     netlifyIdentity.open();
   }
 
-  handleLogOut() {
+  handleLogOut = () => {
     netlifyIdentity.logout();
-    this.setState({user: null});
   }
 
   render() {
     return (
       <Router>
-        <div>{this.state.user ?
+        <div>{this.props.user ?
           <header>
             <Link to="/" className="home" alt="home"><span><img src={home} /></span></Link>
             <a onClick={this.handleLogOut}>Logout</a>
@@ -45,7 +34,7 @@ class App extends Component {
             <Link to="/new" className="nav-link" alt="Add A Repo"><img src={plus} /></Link>
           </header> : <header><a onClick={this.handleLogIn}>Login</a></header>}
           <section>
-            <Route exact path="/" component={Repositories}/>
+            <Route exact path="/" component={Login}/>
             <Route path="/repos" component={Repositories}/>
             <Route path="/new" component={NewRepo}/>
           </section>
@@ -56,4 +45,11 @@ class App extends Component {
   }
 }
 
-export default App;
+function mapStateToProps(state, ownProps) {
+  return {
+    user: state.user,
+  };
+}
+
+export default connect(mapStateToProps)(App);
+

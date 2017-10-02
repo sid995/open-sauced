@@ -1,11 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
-import ApolloClient, {createNetworkInterface} from "apollo-client";
-import {ApolloProvider} from "react-apollo";
 import "./index.css";
-import netlifyIdentity from "netlify-identity-widget";
 
+import {ApolloClient, ApolloProvider, createNetworkInterface} from "react-apollo";
+import {createStore, combineReducers, applyMiddleware, compose} from "redux";
+import thunkMiddleware from "redux-thunk";
+import {userReducer} from "./reducers/userReducer";
+
+import netlifyIdentity from "netlify-identity-widget";
 netlifyIdentity.init();
 
 const client = new ApolloClient({
@@ -13,13 +16,27 @@ const client = new ApolloClient({
   dataIdFromObject: (o) => o.id
 });
 
+const store = createStore(
+  combineReducers({
+    user: userReducer,
+    apollo: client.reducer(),
+  }),
+  {}, // initial state
+  compose(
+    applyMiddleware(
+      client.middleware(),
+      thunkMiddleware
+    ),
+    process.env.NODE_ENV !== "production" && window.devToolsExtension
+      ? window.devToolsExtension()
+      : (f) => f
+  )
+);
+
 ReactDOM.render((
-  <ApolloProvider client={client}>
+  <ApolloProvider store={store} client={client}>
     <App />
   </ApolloProvider>
   ),
   document.getElementById("root")
 );
-
-// remove before sending to production
-window.identity = netlifyIdentity;
